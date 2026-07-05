@@ -81,9 +81,9 @@ img{max-width:100%}
 .repriseBar .rLbl{display:block;font-family:'Barlow Condensed';font-weight:700;font-size:13px;letter-spacing:2.5px;text-transform:uppercase;opacity:.75}
 .repriseBar .rDate{display:block;font-family:'Barlow Condensed';font-weight:900;font-size:29px;line-height:1;text-transform:uppercase;letter-spacing:1px}
 .repriseBar .rSub{display:block;font-size:11.5px;font-weight:700;margin-top:3px;opacity:.8}
-.staffMsg{margin-top:18px;font-family:'Barlow Condensed';font-weight:900;font-size:27px;line-height:1.15;
-  text-transform:uppercase;letter-spacing:1px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35)}
-.staffMsg br + *{}
+.staffMsgHome{margin-top:16px;background:linear-gradient(120deg,var(--navy),var(--blue));border-radius:14px;
+  padding:16px 14px;text-align:center;font-family:'Barlow Condensed';font-weight:900;font-size:24px;line-height:1.2;
+  text-transform:uppercase;letter-spacing:1px;color:var(--yellow);box-shadow:0 5px 16px rgba(8,43,94,.25)}
 .loginFoot{margin-top:16px;font-size:12px;color:#9FB8DE}
 
 /* ---------- APP ---------- */
@@ -349,8 +349,7 @@ input[type=file]{display:none}
       <span class="rDate">Jeudi 23 juillet</span>
       <span class="rSub">Groupes A &amp; B &bull; Stage de coh&eacute;sion les 25-26 juillet</span>
     </div>
-    <div class="staffMsg">Bon programme &agrave; tous&hellip;<br>et h&acirc;te de vous retrouver !</div>
-    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v3.1</div>
+    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v3.4</div>
   </div>
 </div>
 
@@ -393,11 +392,10 @@ const SUPABASE_KEY = 'sb_publishable_0B-52I1eH1W_QF1E2hCVfw_rtv_LBHL';
 const COACH_CODE = 'coachfcn26';
 /* MODE TEST : true = toutes les seances sont deverrouillees (demo).
    Pour verrouiller avant le lancement : remplacer true par false ci-dessous. */
-const MODE_TEST = true;
+const MODE_TEST = false;
 const REPRISE_DATE = '2026-07-23';
 const LS_PREFIX = 'challengeFCN_';
 
-const PLAYERS = [{"code":"emilioabo","nom":"ABOGHET","prenom":"Emilio","surnom":""},{"code":"nathanast","nom":"ASTIER","prenom":"Nathan","surnom":"El Travieso"},{"code":"mathieuast","nom":"ASTRUBAL","prenom":"Mathieu","surnom":""},{"code":"mounirber","nom":"BERKOUN","prenom":"Mounir","surnom":"El Diablo"},{"code":"nolanber","nom":"BERNARD","prenom":"Nolan","surnom":""},{"code":"leobis","nom":"BISTEUR","prenom":"Léo","surnom":"El Fiestero"},{"code":"hugobon","nom":"BONJOUR","prenom":"Hugo","surnom":"El Obrero"},{"code":"nicolasbon","nom":"BONNET","prenom":"Nicolas","surnom":""},{"code":"thomasbos","nom":"BOSSI","prenom":"Thomas","surnom":""},{"code":"bryanbot","nom":"BOTEY","prenom":"Bryan","surnom":""},{"code":"timeobri","nom":"BRIENNE","prenom":"Timéo","surnom":""},{"code":"hugocha","nom":"CHAILLARD","prenom":"Hugo","surnom":"La Araña"},{"code":"julescha","nom":"CHAUMONT","prenom":"Jules","surnom":""},{"code":"johnche","nom":"CHEVALIER","prenom":"John","surnom":""},{"code":"simonche","nom":"CHEVASSUS","prenom":"Simon","surnom":""},{"code":"albancho","nom":"CHOULET","prenom":"Alban","surnom":""},{"code":"emiliocor","nom":"CORBERAND","prenom":"Emilio","surnom":""},{"code":"enzocre","nom":"CRESSIER","prenom":"Enzo","surnom":""},{"code":"clementcro","nom":"CROCOMBETTE","prenom":"Clément","surnom":"El Elegante"},{"code":"romaindau","nom":"DAUTEL","prenom":"Romain","surnom":"El Zorro"},{"code":"nicolasdel","nom":"DELAGOUTTE","prenom":"Nicolas","surnom":""},{"code":"wadirelm","nom":"EL MORABIT","prenom":"Wadir","surnom":""},{"code":"kevinfig","nom":"FIGUEREIDO","prenom":"Kevin","surnom":"El Inquilino"},{"code":"leofou","nom":"FOUQUE","prenom":"Léo","surnom":""},{"code":"gauthiergar","nom":"GARRET","prenom":"Gauthier","surnom":""},{"code":"matteoger","nom":"GERARDO","prenom":"Mattéo","surnom":""},{"code":"alexandregru","nom":"GRUHIER","prenom":"Alexandre","surnom":""},{"code":"imraneham","nom":"HAMIDOUNI","prenom":"Imrane","surnom":""},{"code":"jeanbaptisita","nom":"ITA","prenom":"Jean-Baptis","surnom":""},{"code":"julesjac","nom":"JACQUOT","prenom":"Jules","surnom":"El Sabio"},{"code":"cyrillan","nom":"LANTIEZ","prenom":"Cyril","surnom":""},{"code":"juleslau","nom":"LAURY","prenom":"Jules","surnom":"El Mago"},{"code":"jullianmag","nom":"MAGDONNAL","prenom":"Jullian","surnom":"El Cerebro"},{"code":"enzoman","nom":"MANNIEZ","prenom":"Enzo","surnom":""},{"code":"achillemar","nom":"MARTEL","prenom":"Achille","surnom":"El Huracán"},{"code":"artusmar","nom":"MARSIGNY","prenom":"Artus","surnom":""},{"code":"janypar","nom":"PARISOT","prenom":"Jany","surnom":"El Capitán"},{"code":"arthurpet","nom":"PETIT","prenom":"Arthur","surnom":""},{"code":"mathisple","nom":"PLEIGNET","prenom":"Mathis","surnom":""},{"code":"emilienpou","nom":"POULET","prenom":"Emilien","surnom":""},{"code":"florianren","nom":"RENAUD","prenom":"Florian","surnom":""},{"code":"louissch","nom":"SCHWAB","prenom":"Louis","surnom":"El Arquitecto"},{"code":"nathansig","nom":"SIGNES","prenom":"Nathan","surnom":""},{"code":"matheothu","nom":"THUEILLON","prenom":"Mathéo","surnom":""},{"code":"leowoj","nom":"WOJTCZAK","prenom":"Léo","surnom":""},{"code":"anthonyzel","nom":"ZELFA","prenom":"Anthony","surnom":""}];
 
 /* Types : capa (vert), puissance (rouge), renfo (bleu), repos, reprise
    course:true => séance course (photo GPS bonus possible) */
@@ -547,6 +545,12 @@ function compressImage(file){
   });
 }
 
+/* Genere un code d'acces : prenom + 3 premieres lettres du nom, minuscules sans accents */
+function makeCode(prenom, nom){
+  const n = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,'');
+  return n(prenom) + n(nom).slice(0,3);
+}
+
 /* ============ INDICES PHOTOS (EXIF) ============ */
 /* Lit la date de prise de vue et le modele d'appareil dans la photo d'origine.
    Les images IA / telechargees / captures d'ecran n'ont en general aucune metadonnee. */
@@ -634,26 +638,29 @@ async function login(){
     enterApp();
     return;
   }
-  const player = PLAYERS.find(p=>p.code===code);
-  if(!player){ errBox.textContent = 'Code inconnu. Vérifie l\'orthographe ou contacte le staff.'; return; }
-
   $('#loginBtn').innerHTML = '<span class="spin"></span>';
   try{
     const row = await sbFetchPlayer(code);
+    if(!row){
+      errBox.textContent = 'Code inconnu. Vérifie l\'orthographe ou contacte le staff.';
+      $('#loginBtn').textContent = 'Entrer sur le terrain';
+      return;
+    }
+    const player = {code: row.code, nom: row.nom, prenom: row.prenom, surnom: row.surnom};
     state = {
       code, player, coach:false,
-      data: (row && row.data && row.data.days) ? row.data : {days:{}},
-      points: row ? (row.points||0) : 0
+      data: (row.data && row.data.days) ? row.data : {days:{}},
+      points: row.points || 0
     };
     state.points = computePoints(state.data);
     localStorage.setItem(LS_PREFIX+'session', code);
-    localStorage.setItem(LS_PREFIX+'cache_'+code, JSON.stringify({data:state.data, points:state.points}));
+    localStorage.setItem(LS_PREFIX+'cache_'+code, JSON.stringify({player, data:state.data, points:state.points}));
     enterApp();
   }catch(e){
     const cached = localStorage.getItem(LS_PREFIX+'cache_'+code);
     if(cached){
       const c = JSON.parse(cached);
-      state = {code, player, data:c.data, points:c.points, coach:false};
+      state = {code, player: c.player || {code, prenom:'', nom:'', surnom:''}, data:c.data, points:c.points, coach:false};
       enterApp();
       toast('Mode hors-ligne : connexion internet requise pour valider une séance.', true);
     }else{
@@ -732,6 +739,7 @@ function renderAccueil(){
     '<p>Rendez-vous à la reprise avec des jambes, du souffle… et surtout l\'envie de faire de notre équipe une référence par son intensité, son pressing et sa capacité à asphyxier les adversaires.</p>'+
     '<p><strong>Bon challenge à tous… et que le meilleur gagne !</strong></p>'+
     '<div class="coachSign">— Le Staff Seniors</div>'+
+    '<div class="staffMsgHome">Bon programme à tous…<br>et hâte de vous retrouver !</div>'+
   '</div>'+
 
   '<div class="card">'+
@@ -1103,6 +1111,15 @@ async function renderStaff(){
     '<div class="txt"><strong>Zone sensible.</strong> Remet les points et validations de tous les joueurs \u00e0 z\u00e9ro (les codes d\'acc\u00e8s restent). Utile avant le lancement officiel apr\u00e8s les tests.</div>'+
     '<button class="btnReset" onclick="coachResetAll()">Reset de tous les scores</button>'+
   '</div>';
+  html += '<div class="card"><h2><span class="bar"></span>Ajouter un joueur</h2>'+
+    '<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Pour un renfort en cours de programme : son code est g\u00e9n\u00e9r\u00e9 automatiquement, sans rien red\u00e9ployer.</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<input id="np_prenom" placeholder="Pr\u00e9nom" style="flex:1;min-width:110px;padding:11px;border-radius:10px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:14px">'+
+      '<input id="np_nom" placeholder="Nom" style="flex:1;min-width:110px;padding:11px;border-radius:10px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:14px">'+
+      '<input id="np_surnom" placeholder="Surnom (facultatif)" style="flex:1;min-width:130px;padding:11px;border-radius:10px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:14px">'+
+      '<button class="btn btn-main" style="padding:11px 18px" onclick="coachAddPlayer()">Ajouter</button>'+
+    '</div>'+
+  '</div>';
   html += '<div class="card"><h2><span class="bar"></span>Suivi des joueurs</h2>'+
     '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Les photos de chaque joueur s\'affichent \u00e0 droite de son nom. Touche un joueur pour le d\u00e9tail. Dans la fiche, la croix \u00d7 rouge refuse une validation et recalcule les points.</div>';
   html += rows.map((r,i)=>{
@@ -1238,6 +1255,31 @@ async function coachRevoke(code, date, kind){
     openDetail(code);
   }catch(e){
     toast('\u00c9chec de l\'enregistrement du refus. V\u00e9rifie la connexion.', true);
+  }
+}
+
+async function coachAddPlayer(){
+  if(!state.coach) return;
+  const g = id => (document.getElementById(id) ? document.getElementById(id).value : '').trim();
+  const prenom = g('np_prenom'), nom = g('np_nom'), surnom = g('np_surnom');
+  if(!prenom || !nom){ toast('Renseigne au moins le pr\u00e9nom et le nom.', true); return; }
+  const code = makeCode(prenom, nom);
+  if(code.length < 4){ toast('Pr\u00e9nom ou nom trop court pour g\u00e9n\u00e9rer un code.', true); return; }
+  if((window._staffRows||[]).some(r=>r.code===code)){
+    toast('Le code "'+code+'" existe d\u00e9j\u00e0 (joueur homonyme ?). Ajoute une lettre au pr\u00e9nom.', true);
+    return;
+  }
+  try{
+    const r = await fetch(SUPABASE_URL+'/rest/v1/seniors', {
+      method:'POST',
+      headers: sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'}),
+      body: JSON.stringify({code, nom: nom.toUpperCase(), prenom, surnom, points:0, data:{}})
+    });
+    if(!r.ok) throw new Error('add '+r.status);
+    toast('Joueur ajout\u00e9 ! Son code d\'acc\u00e8s : '+code);
+    renderStaff();
+  }catch(e){
+    toast('\u00c9chec de l\'ajout. V\u00e9rifie la connexion et r\u00e9essaie.', true);
   }
 }
 
