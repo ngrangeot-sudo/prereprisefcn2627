@@ -196,6 +196,37 @@ input[type=file]{display:none}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 
+/* ---------- PRONOSTICS ---------- */
+.matchCard{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px;border-left:6px solid var(--blue)}
+.matchCard.clos{border-left-color:var(--repos);opacity:.96}
+.matchCard.gagne{border-left-color:var(--ok)}
+.matchTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.matchDate{font-size:11.5px;font-weight:600;color:var(--muted)}
+.matchBadge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 9px;border-radius:20px}
+.mb-open{background:#E7F0FB;color:var(--blue)}
+.mb-locked{background:#EEF1F6;color:#7C8AA0}
+.mb-done{background:#E3F6EC;color:#127A43}
+.matchTeams{display:flex;align-items:center;justify-content:center;gap:10px}
+.mTeam{flex:1;text-align:center;font-family:'Barlow Condensed';font-weight:700;font-size:18px;color:var(--navy);line-height:1.1;word-break:break-word}
+.mScore{display:flex;align-items:center;gap:6px}
+.mScore input{width:46px;height:46px;text-align:center;font-family:'Barlow Condensed';font-weight:900;font-size:24px;
+  border:2px solid #D5DEEB;border-radius:10px;color:var(--navy);outline:none}
+.mScore input:focus{border-color:var(--blue)}
+.mScore input:disabled{background:#F2F5FA;color:var(--muted)}
+.mVs{font-family:'Barlow Condensed';font-weight:700;font-size:16px;color:var(--muted)}
+.mReal{text-align:center;font-family:'Barlow Condensed';font-weight:900;font-size:22px;color:var(--navy);margin:8px 0 4px}
+.mMine{text-align:center;font-size:12px;font-weight:600;color:var(--muted);margin-top:4px}
+.mMine.win{color:#127A43}
+.mBtn{width:100%;margin-top:11px;padding:11px;border-radius:10px;background:var(--navy);color:var(--yellow);
+  font-family:'Barlow Condensed';font-size:16px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.mBtn:active{transform:scale(.98)}
+.mBtn:disabled{opacity:.5}
+.pronoIntro{background:linear-gradient(120deg,var(--navy),var(--blue));color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.pronoIntro h3{font-size:19px;font-weight:900;color:var(--yellow);margin-bottom:4px}
+.pronoIntro p{font-size:12.5px;line-height:1.5;color:#D7E4F7}
+.coachMatch{background:#F7FAFF;border:1px solid #E3E9F2;border-radius:10px;padding:11px;margin-bottom:9px}
+.coachMatch .cmT{font-family:'Barlow Condensed';font-weight:700;font-size:15px;color:var(--navy)}
+.coachMatch input{padding:8px;border-radius:8px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:13px}
 /* ---------- CALENDRIER ---------- */
 .calWrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 12px 14px;margin-bottom:16px}
 .calTitle{font-family:'Barlow Condensed';font-weight:900;font-size:22px;color:var(--navy);text-transform:uppercase;
@@ -356,7 +387,7 @@ input[type=file]{display:none}
       <span class="rDate">Jeudi 23 juillet</span>
       <span class="rSub">Groupes A &amp; B &bull; Stage de coh&eacute;sion les 25-26 juillet</span>
     </div>
-    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v3.6</div>
+    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v3.9</div>
   </div>
 </div>
 
@@ -380,6 +411,7 @@ input[type=file]{display:none}
     <button data-tab="accueil" class="active" onclick="showTab('accueil')">Accueil</button>
     <button data-tab="seances" onclick="showTab('seances')">Séances</button>
     <button data-tab="classement" onclick="showTab('classement')">Classement</button>
+    <button data-tab="enigmes" onclick="showTab('enigmes')">Énigmes</button>
     <button data-tab="galerie" onclick="showTab('galerie')">Galerie</button>
   </nav>
 
@@ -387,6 +419,7 @@ input[type=file]{display:none}
     <section id="tab-accueil"></section>
     <section id="tab-seances" class="hidden"></section>
     <section id="tab-classement" class="hidden"></section>
+    <section id="tab-enigmes" class="hidden"></section>
     <section id="tab-galerie" class="hidden"></section>
     <section id="tab-staff" class="hidden"></section>
   </main>
@@ -406,6 +439,23 @@ const MODE_TEST = false;
    Vider la liste [] pour tout reverrouiller. */
 const DATES_OUVERTES = ['2026-07-07'];
 const REPRISE_DATE = '2026-07-23';
+
+/* ===== ENIGMES (portrait chinois) — +5 pts, une seule tentative =====
+   Modifie/ajoute librement. 'reponses' = toutes les variantes acceptees
+   (majuscules, accents et espaces sont ignores automatiquement). */
+const ENIGMES = [
+  {
+    id: 'e1',
+    titre: 'Semaine 1',
+    indices: [
+      'Je suis chanteur',
+      'J\'adore le taboul\u00e9',
+      'Ajoute ici tes autres indices\u2026'
+    ],
+    reponses: ['reponse a definir']
+  }
+  // Pour ajouter une enigme, copie le bloc ci-dessus (avec un id unique : 'e2', 'e3'...)
+];
 const LS_PREFIX = 'challengeFCN_';
 
 
@@ -486,6 +536,9 @@ function computePoints(data){
     total += dayPoints(date, d);
   }
   return total;
+}
+function totalPoints(data){
+  return computePoints(data) + ((data && data.enigPts) || 0);
 }
 function dayPoints(date, d){
   const s = SESSIONS.find(x=>x.date===date);
@@ -711,6 +764,7 @@ function showTab(name){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
   if(name==='classement') renderClassement();
   if(name==='galerie') renderGalerie();
+  if(name==='enigmes') renderEnigmes();
   if(name==='staff') renderStaff();
   window.scrollTo({top:0});
 }
@@ -732,13 +786,14 @@ function renderAccueil(){
   }else{
     countHtml = '<div class="lbl">Challenge terminé</div><div class="big" style="font-size:46px">SAISON LANCÉE</div><div class="when">Merci à tous — place au terrain !</div>';
   }
+  const monTotalAffiche = totalPoints(state.data);
   const done = Object.values(state.data.days||{}).filter(d=>d.s).length;
   const totalSessions = SESSIONS.filter(s=>['capa','puissance','renfo'].includes(s.type)).length;
 
   $('#tab-accueil').innerHTML =
   '<div class="card countCard">'+countHtml+
     '<div class="myPoints">'+
-      '<div><div class="v">'+state.points+'</div><div class="k">Mes points</div></div>'+
+      '<div><div class="v">'+monTotalAffiche+'</div><div class="k">Mes points</div></div>'+
       '<div><div class="v">'+done+'/'+totalSessions+'</div><div class="k">Séances faites</div></div>'+
       '<div><div class="v">'+myRank()+'</div><div class="k">Classement</div></div>'+
     '</div>'+
@@ -872,8 +927,16 @@ function openDay(date){
   if(d.eau) gains.push('<span class="gain won">Eau +1</span>');
   if(gains.length) body += '<div class="gains">'+gains.join('')+'</div>';
 
-  if((MODE_TEST || date === today || DATES_OUVERTES.indexOf(date) >= 0) && (isSession || s.type==='repos')){
+  const corrigeable = (MODE_TEST || date === today || DATES_OUVERTES.indexOf(date) >= 0);
+  const dejaValide = d.s || d.eau || d.coeq || d.gps;
+  if(corrigeable && (isSession || s.type==='repos')){
     body += buildValidZone(s, d);
+    if(dejaValide){
+      body += '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #D8E0EC">'+
+        '<button class="btn btn-sec" style="width:100%;color:#B02A2A;border-color:#E7A6A6" onclick="corrigerJournee(\''+date+'\')">Recommencer ma journ\u00e9e</button>'+
+        '<div style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center">Mauvaise photo ou erreur ? Annule tout et refais ta journ\u00e9e (possible aujourd\'hui seulement).</div>'+
+      '</div>';
+    }
   }else if(isSession && !d.s){
     body += '<div style="margin-top:14px;font-size:13.5px;color:var(--muted)">'+
       (date < today ? 'Cette s\u00e9ance est pass\u00e9e : elle ne peut plus \u00eatre valid\u00e9e.'
@@ -909,7 +972,7 @@ function buildValidZone(s, d){
       '<div class="cTxt"><label for="chk_gps">Photo appli training ou montre GPS</label>'+
       '<small>Photo obligatoire pour valider ces points</small>'+
       '<div class="photoLine"><label class="btn btn-sec" for="ph_gps">Ins\u00e9rer la photo</label>'+
-      '<input type="file" id="ph_gps" accept="image/*" capture="environment" onchange="fileChosen(this,\'gpsName\')">'+
+      '<input type="file" id="ph_gps" accept="image/*" onchange="fileChosen(this,\'gpsName\')">'+
       '<span class="photoName" id="gpsName"></span></div></div>'+
       '<span class="cPts">+5</span></div>';
   }
@@ -919,7 +982,7 @@ function buildValidZone(s, d){
       '<div class="cTxt"><label for="chk_coeq">Selfie avec un co\u00e9quipier pendant la s\u00e9ance</label>'+
       '<small>Photo obligatoire pour valider ces points</small>'+
       '<div class="photoLine"><label class="btn btn-sec" for="ph_coeq">Ins\u00e9rer la photo</label>'+
-      '<input type="file" id="ph_coeq" accept="image/*" capture="environment" onchange="fileChosen(this,\'coeqName\')">'+
+      '<input type="file" id="ph_coeq" accept="image/*" onchange="fileChosen(this,\'coeqName\')">'+
       '<span class="photoName" id="coeqName"></span></div></div>'+
       '<span class="cPts bonus">+2</span></div>';
   }
@@ -947,6 +1010,28 @@ function buildValidZone(s, d){
 function autoSeance(box){
   const cs = document.getElementById('chk_s');
   if(box.checked && cs && !cs.checked) cs.checked = true;
+}
+async function corrigerJournee(date){
+  if(SUPABASE_URL.indexOf('http')!==0){ toast('Application non configur\u00e9e.', true); return; }
+  // Securite : uniquement le jour meme (ou date exceptionnellement ouverte / mode test)
+  if(!MODE_TEST && todayISO() !== date && DATES_OUVERTES.indexOf(date) < 0){
+    toast('La correction n\'est possible que le jour m\u00eame.', true);
+    closeDay(); renderSeances(); return;
+  }
+  if(!confirm('Recommencer toute ta journ\u00e9e du '+dayNum(date)+' '+monthShort(date)+' ?\n\nTes validations et photos du jour seront effac\u00e9es. Tu pourras tout refaire.')) return;
+  delete state.data.days[date];
+  state.points = computePoints(state.data);
+  try{
+    await sbSave();
+    localStorage.setItem(LS_PREFIX+'cache_'+state.code, JSON.stringify({player: state.player, data:state.data, points:state.points}));
+    toast('Journ\u00e9e remise \u00e0 z\u00e9ro. Tu peux tout refaire !');
+    closeDay();
+    renderSeances();
+    renderAccueil();
+    openDay(date);
+  }catch(e){
+    toast('Correction impossible. V\u00e9rifie ta connexion et r\u00e9essaie.', true);
+  }
 }
 async function resetJour(date){
   if(!MODE_TEST) return;
@@ -1049,6 +1134,94 @@ async function persist(msg, party){
   renderAccueil();
 }
 
+/* ================= ENIGMES ================= */
+/* Normalise une reponse : minuscules, sans accents, sans espaces multiples */
+function normRep(s){
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');
+}
+function enigmeGood(enig, saisie){
+  const r = normRep(saisie);
+  return enig.reponses.some(rep => normRep(rep) === r);
+}
+/* Total des points enigmes d'un joueur, recalcule depuis ses reponses */
+function enigTotal(data){
+  let t = 0;
+  const rep = (data && data.enigmes) || {};
+  for(const e of ENIGMES){
+    const mine = rep[e.id];
+    if(mine && mine.ok) t += 5;
+  }
+  return t;
+}
+function renderEnigmes(){
+  const box = $('#tab-enigmes');
+  const rep = (state.data && state.data.enigmes) || {};
+  let html = '<div class="pronoIntro"><h3>\u00c9nigmes du programme</h3>'+
+    '<p>Portrait chinois : lis les indices et devine ! <strong>Une seule tentative</strong> par \u00e9nigme, <strong>+5 pts</strong> si tu trouves.</p></div>';
+
+  if(!ENIGMES.length){
+    html += '<div class="card"><div style="color:var(--muted);font-size:14px">Aucune \u00e9nigme pour le moment.</div></div>';
+    box.innerHTML = html; return;
+  }
+  for(const e of ENIGMES){
+    const mine = rep[e.id];
+    const done = !!mine;
+    let cls = 'matchCard', badge, badgeCls;
+    if(done && mine.ok){ cls += ' gagne'; badge = 'Trouv\u00e9 +5'; badgeCls = 'mb-done'; }
+    else if(done){ cls += ' clos'; badge = 'Rat\u00e9'; badgeCls = 'mb-locked'; }
+    else { badge = '\u00c0 r\u00e9soudre'; badgeCls = 'mb-open'; }
+
+    html += '<div class="'+cls+'">'+
+      '<div class="matchTop"><span class="matchDate" style="font-family:\'Barlow Condensed\';font-weight:700;font-size:15px;color:var(--navy);text-transform:uppercase">'+escapeHtml(e.titre)+'</span>'+
+      '<span class="matchBadge '+badgeCls+'">'+badge+'</span></div>'+
+      '<ul style="list-style:none;margin:4px 0 10px">'+
+        e.indices.map((x,k)=>'<li style="font-size:14px;color:#2A3A55;padding:4px 0 4px 24px;position:relative">'+
+          '<span style="position:absolute;left:0;top:3px;font-family:\'Barlow Condensed\';font-weight:900;color:var(--blue)">'+(k+1)+'.</span>'+escapeHtml(x)+'</li>').join('')+
+      '</ul>';
+
+    if(!done){
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<input id="eg_'+e.id+'" placeholder="Qui suis-je ?" style="flex:1;min-width:150px;padding:12px;border-radius:10px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:15px">'+
+        '<button class="btn btn-main" onclick="validerEnigme(\''+e.id+'\')">Valider ma r\u00e9ponse</button>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:6px">\u26a0 Une seule tentative : r\u00e9fl\u00e9chis bien avant de valider !</div>';
+    }else if(mine.ok){
+      html += '<div class="mMine win">Bravo ! Ta r\u00e9ponse \u00ab '+escapeHtml(mine.rep)+' \u00bb \u00e9tait juste. +5 points !</div>';
+    }else{
+      html += '<div class="mMine">Ta r\u00e9ponse \u00ab '+escapeHtml(mine.rep)+' \u00bb n\'\u00e9tait pas la bonne. Pas de points cette fois.</div>';
+    }
+    html += '</div>';
+  }
+  box.innerHTML = html;
+}
+async function validerEnigme(id){
+  if(SUPABASE_URL.indexOf('http')!==0){ toast('Application non configur\u00e9e.', true); return; }
+  const e = ENIGMES.find(x=>x.id===id);
+  if(!e) return;
+  const rep = (state.data && state.data.enigmes) || {};
+  if(rep[id]){ toast('Tu as d\u00e9j\u00e0 r\u00e9pondu \u00e0 cette \u00e9nigme.', true); renderEnigmes(); return; }
+  const inp = document.getElementById('eg_'+id);
+  const saisie = inp ? inp.value.trim() : '';
+  if(!saisie){ toast('\u00c9cris ta r\u00e9ponse avant de valider.', true); return; }
+  if(!confirm('Valider d\u00e9finitivement \u00ab '+saisie+' \u00bb ?\n\nTu n\'as qu\'une seule tentative pour cette \u00e9nigme.')) return;
+
+  const ok = enigmeGood(e, saisie);
+  state.data.enigmes = state.data.enigmes || {};
+  state.data.enigmes[id] = {rep: saisie, ok, ts: Date.now()};
+  state.data.enigPts = enigTotal(state.data);
+  try{
+    await sbSave();
+    localStorage.setItem(LS_PREFIX+'cache_'+state.code, JSON.stringify({player: state.player, data:state.data, points:state.points}));
+    if(ok){ toast('Bravo ! Bonne r\u00e9ponse : +5 points !'); confetti(); }
+    else { toast('Dommage, ce n\'\u00e9tait pas la bonne r\u00e9ponse.'); }
+    renderEnigmes();
+    renderAccueil();
+  }catch(err){
+    delete state.data.enigmes[id];
+    toast('Enregistrement impossible. V\u00e9rifie ta connexion et r\u00e9essaie.', true);
+  }
+}
+
 /* ================= GALERIE (joueurs) ================= */
 async function renderGalerie(){
   const box = $('#tab-galerie');
@@ -1093,6 +1266,8 @@ async function renderClassement(){
   let rows;
   try{
     rows = await sbFetchAll();
+    rows.forEach(r=>{ r._total = (r.points||0) + ((r.data && r.data.enigPts)||0); });
+    rows.sort((a,b)=> b._total - a._total || (a.nom>b.nom?1:-1));
     rankCache = rows;
   }catch(e){
     box.innerHTML = '<div class="card"><h2><span class="bar"></span>Classement général</h2><div style="color:#B02A2A;font-size:14px;font-weight:600">Impossible de charger le classement. Vérifie ta connexion puis reviens sur cet onglet.</div></div>';
@@ -1102,7 +1277,7 @@ async function renderClassement(){
 
   const top3 = rows.slice(0,3);
   if(top3.length === 3){
-    const pod = (r,i)=>'<div class="pod pod'+(i+1)+'"><div class="rankN">'+(i+1)+'</div><div class="nm">'+escapeHtml(displayName(r))+'</div><div class="pp">'+r.points+' pts</div></div>';
+    const pod = (r,i)=>'<div class="pod pod'+(i+1)+'"><div class="rankN">'+(i+1)+'</div><div class="nm">'+escapeHtml(displayName(r))+'</div><div class="pp">'+(r._total!=null?r._total:r.points)+' pts</div></div>';
     html += '<div class="podium">'+pod(top3[1],1)+pod(top3[0],0)+pod(top3[2],2)+'</div>';
   }
   html += rows.map((r,i)=>{
@@ -1111,7 +1286,7 @@ async function renderClassement(){
       '<div class="pos">'+(i+1)+'</div>'+
       '<div class="who"><div class="n">'+escapeHtml(r.prenom)+' '+escapeHtml(r.nom)+'</div>'+
       (r.surnom?'<div class="s">'+escapeHtml(r.surnom)+'</div>':'')+'</div>'+
-      '<div class="p">'+r.points+' <small>pts</small></div>'+
+      '<div class="p">'+(r._total!=null?r._total:r.points)+' <small>pts</small></div>'+
     '</div>';
   }).join('');
   html += '</div>';
