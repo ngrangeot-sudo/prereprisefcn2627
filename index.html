@@ -387,7 +387,7 @@ input[type=file]{display:none}
       <span class="rDate">Jeudi 23 juillet</span>
       <span class="rSub">Groupes A &amp; B &bull; Stage de coh&eacute;sion les 25-26 juillet</span>
     </div>
-    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v3.9</div>
+    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v4.0</div>
   </div>
 </div>
 
@@ -411,7 +411,6 @@ input[type=file]{display:none}
     <button data-tab="accueil" class="active" onclick="showTab('accueil')">Accueil</button>
     <button data-tab="seances" onclick="showTab('seances')">Séances</button>
     <button data-tab="classement" onclick="showTab('classement')">Classement</button>
-    <button data-tab="enigmes" onclick="showTab('enigmes')">Énigmes</button>
     <button data-tab="galerie" onclick="showTab('galerie')">Galerie</button>
   </nav>
 
@@ -419,7 +418,6 @@ input[type=file]{display:none}
     <section id="tab-accueil"></section>
     <section id="tab-seances" class="hidden"></section>
     <section id="tab-classement" class="hidden"></section>
-    <section id="tab-enigmes" class="hidden"></section>
     <section id="tab-galerie" class="hidden"></section>
     <section id="tab-staff" class="hidden"></section>
   </main>
@@ -440,22 +438,6 @@ const MODE_TEST = false;
 const DATES_OUVERTES = ['2026-07-07'];
 const REPRISE_DATE = '2026-07-23';
 
-/* ===== ENIGMES (portrait chinois) — +5 pts, une seule tentative =====
-   Modifie/ajoute librement. 'reponses' = toutes les variantes acceptees
-   (majuscules, accents et espaces sont ignores automatiquement). */
-const ENIGMES = [
-  {
-    id: 'e1',
-    titre: 'Semaine 1',
-    indices: [
-      'Je suis chanteur',
-      'J\'adore le taboul\u00e9',
-      'Ajoute ici tes autres indices\u2026'
-    ],
-    reponses: ['reponse a definir']
-  }
-  // Pour ajouter une enigme, copie le bloc ci-dessus (avec un id unique : 'e2', 'e3'...)
-];
 const LS_PREFIX = 'challengeFCN_';
 
 
@@ -538,7 +520,7 @@ function computePoints(data){
   return total;
 }
 function totalPoints(data){
-  return computePoints(data) + ((data && data.enigPts) || 0);
+  return computePoints(data);
 }
 function dayPoints(date, d){
   const s = SESSIONS.find(x=>x.date===date);
@@ -764,7 +746,6 @@ function showTab(name){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
   if(name==='classement') renderClassement();
   if(name==='galerie') renderGalerie();
-  if(name==='enigmes') renderEnigmes();
   if(name==='staff') renderStaff();
   window.scrollTo({top:0});
 }
@@ -1134,94 +1115,6 @@ async function persist(msg, party){
   renderAccueil();
 }
 
-/* ================= ENIGMES ================= */
-/* Normalise une reponse : minuscules, sans accents, sans espaces multiples */
-function normRep(s){
-  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');
-}
-function enigmeGood(enig, saisie){
-  const r = normRep(saisie);
-  return enig.reponses.some(rep => normRep(rep) === r);
-}
-/* Total des points enigmes d'un joueur, recalcule depuis ses reponses */
-function enigTotal(data){
-  let t = 0;
-  const rep = (data && data.enigmes) || {};
-  for(const e of ENIGMES){
-    const mine = rep[e.id];
-    if(mine && mine.ok) t += 5;
-  }
-  return t;
-}
-function renderEnigmes(){
-  const box = $('#tab-enigmes');
-  const rep = (state.data && state.data.enigmes) || {};
-  let html = '<div class="pronoIntro"><h3>\u00c9nigmes du programme</h3>'+
-    '<p>Portrait chinois : lis les indices et devine ! <strong>Une seule tentative</strong> par \u00e9nigme, <strong>+5 pts</strong> si tu trouves.</p></div>';
-
-  if(!ENIGMES.length){
-    html += '<div class="card"><div style="color:var(--muted);font-size:14px">Aucune \u00e9nigme pour le moment.</div></div>';
-    box.innerHTML = html; return;
-  }
-  for(const e of ENIGMES){
-    const mine = rep[e.id];
-    const done = !!mine;
-    let cls = 'matchCard', badge, badgeCls;
-    if(done && mine.ok){ cls += ' gagne'; badge = 'Trouv\u00e9 +5'; badgeCls = 'mb-done'; }
-    else if(done){ cls += ' clos'; badge = 'Rat\u00e9'; badgeCls = 'mb-locked'; }
-    else { badge = '\u00c0 r\u00e9soudre'; badgeCls = 'mb-open'; }
-
-    html += '<div class="'+cls+'">'+
-      '<div class="matchTop"><span class="matchDate" style="font-family:\'Barlow Condensed\';font-weight:700;font-size:15px;color:var(--navy);text-transform:uppercase">'+escapeHtml(e.titre)+'</span>'+
-      '<span class="matchBadge '+badgeCls+'">'+badge+'</span></div>'+
-      '<ul style="list-style:none;margin:4px 0 10px">'+
-        e.indices.map((x,k)=>'<li style="font-size:14px;color:#2A3A55;padding:4px 0 4px 24px;position:relative">'+
-          '<span style="position:absolute;left:0;top:3px;font-family:\'Barlow Condensed\';font-weight:900;color:var(--blue)">'+(k+1)+'.</span>'+escapeHtml(x)+'</li>').join('')+
-      '</ul>';
-
-    if(!done){
-      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-        '<input id="eg_'+e.id+'" placeholder="Qui suis-je ?" style="flex:1;min-width:150px;padding:12px;border-radius:10px;border:1.5px solid #D5DEEB;font-family:inherit;font-size:15px">'+
-        '<button class="btn btn-main" onclick="validerEnigme(\''+e.id+'\')">Valider ma r\u00e9ponse</button>'+
-      '</div>'+
-      '<div style="font-size:11.5px;color:var(--muted);margin-top:6px">\u26a0 Une seule tentative : r\u00e9fl\u00e9chis bien avant de valider !</div>';
-    }else if(mine.ok){
-      html += '<div class="mMine win">Bravo ! Ta r\u00e9ponse \u00ab '+escapeHtml(mine.rep)+' \u00bb \u00e9tait juste. +5 points !</div>';
-    }else{
-      html += '<div class="mMine">Ta r\u00e9ponse \u00ab '+escapeHtml(mine.rep)+' \u00bb n\'\u00e9tait pas la bonne. Pas de points cette fois.</div>';
-    }
-    html += '</div>';
-  }
-  box.innerHTML = html;
-}
-async function validerEnigme(id){
-  if(SUPABASE_URL.indexOf('http')!==0){ toast('Application non configur\u00e9e.', true); return; }
-  const e = ENIGMES.find(x=>x.id===id);
-  if(!e) return;
-  const rep = (state.data && state.data.enigmes) || {};
-  if(rep[id]){ toast('Tu as d\u00e9j\u00e0 r\u00e9pondu \u00e0 cette \u00e9nigme.', true); renderEnigmes(); return; }
-  const inp = document.getElementById('eg_'+id);
-  const saisie = inp ? inp.value.trim() : '';
-  if(!saisie){ toast('\u00c9cris ta r\u00e9ponse avant de valider.', true); return; }
-  if(!confirm('Valider d\u00e9finitivement \u00ab '+saisie+' \u00bb ?\n\nTu n\'as qu\'une seule tentative pour cette \u00e9nigme.')) return;
-
-  const ok = enigmeGood(e, saisie);
-  state.data.enigmes = state.data.enigmes || {};
-  state.data.enigmes[id] = {rep: saisie, ok, ts: Date.now()};
-  state.data.enigPts = enigTotal(state.data);
-  try{
-    await sbSave();
-    localStorage.setItem(LS_PREFIX+'cache_'+state.code, JSON.stringify({player: state.player, data:state.data, points:state.points}));
-    if(ok){ toast('Bravo ! Bonne r\u00e9ponse : +5 points !'); confetti(); }
-    else { toast('Dommage, ce n\'\u00e9tait pas la bonne r\u00e9ponse.'); }
-    renderEnigmes();
-    renderAccueil();
-  }catch(err){
-    delete state.data.enigmes[id];
-    toast('Enregistrement impossible. V\u00e9rifie ta connexion et r\u00e9essaie.', true);
-  }
-}
-
 /* ================= GALERIE (joueurs) ================= */
 async function renderGalerie(){
   const box = $('#tab-galerie');
@@ -1266,8 +1159,6 @@ async function renderClassement(){
   let rows;
   try{
     rows = await sbFetchAll();
-    rows.forEach(r=>{ r._total = (r.points||0) + ((r.data && r.data.enigPts)||0); });
-    rows.sort((a,b)=> b._total - a._total || (a.nom>b.nom?1:-1));
     rankCache = rows;
   }catch(e){
     box.innerHTML = '<div class="card"><h2><span class="bar"></span>Classement général</h2><div style="color:#B02A2A;font-size:14px;font-weight:600">Impossible de charger le classement. Vérifie ta connexion puis reviens sur cet onglet.</div></div>';
@@ -1277,7 +1168,7 @@ async function renderClassement(){
 
   const top3 = rows.slice(0,3);
   if(top3.length === 3){
-    const pod = (r,i)=>'<div class="pod pod'+(i+1)+'"><div class="rankN">'+(i+1)+'</div><div class="nm">'+escapeHtml(displayName(r))+'</div><div class="pp">'+(r._total!=null?r._total:r.points)+' pts</div></div>';
+    const pod = (r,i)=>'<div class="pod pod'+(i+1)+'"><div class="rankN">'+(i+1)+'</div><div class="nm">'+escapeHtml(displayName(r))+'</div><div class="pp">'+r.points+' pts</div></div>';
     html += '<div class="podium">'+pod(top3[1],1)+pod(top3[0],0)+pod(top3[2],2)+'</div>';
   }
   html += rows.map((r,i)=>{
@@ -1286,7 +1177,7 @@ async function renderClassement(){
       '<div class="pos">'+(i+1)+'</div>'+
       '<div class="who"><div class="n">'+escapeHtml(r.prenom)+' '+escapeHtml(r.nom)+'</div>'+
       (r.surnom?'<div class="s">'+escapeHtml(r.surnom)+'</div>':'')+'</div>'+
-      '<div class="p">'+(r._total!=null?r._total:r.points)+' <small>pts</small></div>'+
+      '<div class="p">'+r.points+' <small>pts</small></div>'+
     '</div>';
   }).join('');
   html += '</div>';
