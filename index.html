@@ -1145,30 +1145,37 @@ async function renderGalerie(){
     box.innerHTML = '<div class="card"><h2><span class="bar"></span>Galerie du groupe</h2><div style="color:#B02A2A;font-size:14px;font-weight:600">Impossible de charger les photos. V\u00e9rifie ta connexion et reviens sur cet onglet.</div></div>';
     return;
   }
-  const photos = [];
+  const training = [], selfies = [];
   for(const r of rows){
     const days = (r.data && r.data.days) || {};
     for(const [date, d] of Object.entries(days)){
-      for(const [kind, label] of [['gps','Course'],['coeq','Co\u00e9quipiers'],['sPhoto','S\u00e9ance']]){
-        if(d[kind] && typeof d[kind]==='string' && d[kind].indexOf('http')===0){
-          photos.push({url:d[kind], label, date, who: r.surnom || r.prenom});
-        }
+      const who = r.surnom || r.prenom;
+      for(const kind of ['gps','sPhoto']){
+        if(d[kind] && typeof d[kind]==='string' && d[kind].indexOf('http')===0) training.push({url:d[kind], date, who});
       }
+      if(d.coeq && typeof d.coeq==='string' && d.coeq.indexOf('http')===0) selfies.push({url:d.coeq, date, who});
     }
   }
-  photos.sort((a,b)=> b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
+  const parRecent = (a,b)=> b.date < a.date ? -1 : (b.date > a.date ? 1 : 0);
+  training.sort(parRecent); selfies.sort(parRecent);
 
-  let html = '<div class="card"><h2><span class="bar"></span>Galerie du groupe</h2>'+
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Toutes les photos partag\u00e9es par les joueurs pendant le programme.</div>';
-  if(photos.length){
-    html += '<div class="galGrid">'+photos.map(p=>
-      '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
-      '<img src="'+p.url+'" loading="lazy" alt="">'+
-      '<div class="gTxt">'+escapeHtml(p.who)+'<small>'+dayNum(p.date)+' juil. \u2022 '+p.label+'</small></div></a>').join('')+'</div>';
-  }else{
-    html += '<div style="font-size:14px;color:var(--muted)">Aucune photo pour le moment. Les premi\u00e8res validations avec photo appara\u00eetront ici !</div>';
-  }
-  html += '</div>';
+  const grille = (arr, vide) => arr.length
+    ? '<div class="galGrid">'+arr.map(p=>
+        '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
+        '<img src="'+p.url+'" loading="lazy" alt="">'+
+        '<div class="gTxt">'+escapeHtml(p.who)+'<small>'+dayNum(p.date)+' juil.</small></div></a>').join('')+'</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:10px">'+arr.length+' photo'+(arr.length>1?'s':'')+'.</div>'
+    : '<div style="font-size:14px;color:var(--muted)">'+vide+'</div>';
+
+  const html =
+    '<div class="card"><h2><span class="bar"></span>Photos training</h2>'+
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Les preuves de s\u00e9ance et de course (appli / montre GPS) partag\u00e9es par le groupe.</div>'+
+      grille(training, 'Aucune photo training pour le moment. Les premi\u00e8res validations avec photo appara\u00eetront ici !')+
+    '</div>'+
+    '<div class="card"><h2><span class="bar"></span>Photos co\u00e9quipiers</h2>'+
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Les selfies avec les copains du groupe.</div>'+
+      grille(selfies, 'Aucun selfie co\u00e9quipier pour le moment. Prends une photo avec un co\u00e9quipier pendant une s\u00e9ance !')+
+    '</div>';
   box.innerHTML = html;
 }
 
@@ -1371,17 +1378,23 @@ async function renderStaff(){
   }).join('');
   html += '</div>';
 
-  html += '<div class="card"><h2><span class="bar"></span>Derni\u00e8res photos re\u00e7ues</h2>';
-  if(photos.length){
-    html += '<div class="galGrid">'+photos.slice(0,24).map(p=>
-      '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
-      '<img src="'+p.url+'" loading="lazy" alt="">'+
-      '<div class="gTxt">'+escapeHtml(p.surnom || p.nom)+'<small>'+dayNum(p.date)+' juil. \u2022 '+p.label+'</small></div></a>').join('')+'</div>';
-    if(photos.length > 24) html += '<div style="font-size:12px;color:var(--muted);margin-top:8px">'+(photos.length-24)+' autres photos dans les fiches joueurs.</div>';
-  }else{
-    html += '<div style="font-size:13.5px;color:var(--muted)">Aucune photo re\u00e7ue pour le moment. Elles appara\u00eetront ici d\u00e8s les premi\u00e8res validations.</div>';
-  }
-  html += '</div>';
+  const trainingS = photos.filter(p=>p.label!=='Co\u00e9quipiers');
+  const selfiesS  = photos.filter(p=>p.label==='Co\u00e9quipiers');
+  const blocStaff = (arr, titre, vide) => {
+    let h = '<div class="card"><h2><span class="bar"></span>'+titre+'</h2>';
+    if(arr.length){
+      h += '<div class="galGrid">'+arr.slice(0,24).map(p=>
+        '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
+        '<img src="'+p.url+'" loading="lazy" alt="">'+
+        '<div class="gTxt">'+escapeHtml(p.surnom || p.nom)+'<small>'+dayNum(p.date)+' juil.</small></div></a>').join('')+'</div>';
+      if(arr.length > 24) h += '<div style="font-size:12px;color:var(--muted);margin-top:8px">'+(arr.length-24)+' autres photos dans les fiches joueurs.</div>';
+    }else{
+      h += '<div style="font-size:13.5px;color:var(--muted)">'+vide+'</div>';
+    }
+    return h + '</div>';
+  };
+  html += blocStaff(trainingS, 'Photos training re\u00e7ues', 'Aucune photo training re\u00e7ue pour le moment. Elles appara\u00eetront ici d\u00e8s les premi\u00e8res validations.');
+  html += blocStaff(selfiesS,  'Photos co\u00e9quipiers re\u00e7ues', 'Aucun selfie co\u00e9quipier re\u00e7u pour le moment.');
 
   box.innerHTML = html;
   window._staffRows = rows;
