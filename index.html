@@ -280,6 +280,22 @@ input[type=file]{display:none}
 .rankRow .p small{font-size:11px;font-weight:600;color:var(--muted);font-family:'Inter'}
 
 /* ---------- COACH ---------- */
+.playerPct{flex-shrink:0;text-align:center;min-width:52px}
+.playerPct .pv{font-family:'Barlow Condensed';font-weight:900;font-size:17px;line-height:1;color:var(--navy)}
+.playerPct .pk{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-top:1px}
+.pctBar{width:100%;height:5px;border-radius:3px;background:#EEF1F6;margin-top:3px;overflow:hidden}
+.pctBar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--capa))}
+.chartCard{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px 14px;margin-bottom:16px}
+.chartCard h2{font-size:21px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.chartSub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chartLegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.chartLegend span{display:inline-flex;align-items:center;gap:6px}
+.chartLegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.weekTot{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.weekTot .wt{flex:1;min-width:90px;background:#F5F8FC;border-radius:12px;padding:11px 10px;text-align:center}
+.weekTot .wt .wv{font-family:'Barlow Condensed';font-weight:900;font-size:24px;color:var(--blue);line-height:1}
+.weekTot .wt .wk{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:3px}
+/* ---------- COACH-END ---------- */
 .statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .statBox{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:14px 10px;text-align:center}
 .statBox .v{font-family:'Barlow Condensed';font-weight:900;font-size:30px;color:var(--blue);line-height:1}
@@ -387,7 +403,7 @@ input[type=file]{display:none}
       <span class="rDate">Jeudi 23 juillet</span>
       <span class="rSub">Groupes A &amp; B &bull; Stage de coh&eacute;sion les 25-26 juillet</span>
     </div>
-    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v4.0</div>
+    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v4.1</div>
   </div>
 </div>
 
@@ -518,6 +534,10 @@ function computePoints(data){
     total += dayPoints(date, d);
   }
   return total;
+}
+/* Nombre de seances (course + renfo) programmees dans tout le calendrier */
+function nbSeancesProgrammees(){
+  return SESSIONS.filter(s=>['capa','puissance','renfo'].includes(s.type)).length;
 }
 function totalPoints(data){
   return computePoints(data);
@@ -1186,6 +1206,87 @@ async function renderClassement(){
 }
 
 /* ================= ESPACE STAFF ================= */
+/* Graphique SVG : nb de joueurs ayant valide une seance, jour par jour, groupe par semaine */
+function buildChartParticipation(rows){
+  const jours = SESSIONS.filter(s=>['capa','puissance','renfo'].includes(s.type));
+  // Comptage par date
+  const parJour = {};
+  for(const s of jours) parJour[s.date] = 0;
+  for(const r of rows){
+    const days = (r.data && r.data.days) || {};
+    for(const s of jours){ if(days[s.date] && days[s.date].s) parJour[s.date]++; }
+  }
+  const nbJoueurs = rows.length || 1;
+  const maxV = Math.max(1, ...Object.values(parJour));
+
+  // Semaines (lundi->dimanche) pour separateurs et totaux
+  const semaine = d => {
+    const day = new Date(d+'T12:00:00');
+    const diff = Math.floor((day - new Date('2026-07-06T12:00:00'))/86400000);
+    return Math.floor(diff/7); // 0,1,2
+  };
+  const semTot = [0,0,0], semCap = [0,0,0];
+  for(const s of jours){
+    const w = semaine(s.date);
+    if(w>=0 && w<3){ semTot[w] += parJour[s.date]; semCap[w] += nbJoueurs; }
+  }
+
+  // Dimensions SVG
+  const W = 680, H = 240, padL = 34, padB = 42, padT = 12, padR = 12;
+  const gw = W - padL - padR, gh = H - padT - padB;
+  const n = jours.length;
+  const bw = Math.min(34, gw / n * 0.6);
+  const step = gw / n;
+
+  let bars = '', labels = '', wsep = '';
+  jours.forEach((s, k) => {
+    const v = parJour[s.date];
+    const bh = Math.round(v / maxV * gh);
+    const x = padL + step*k + step/2;
+    const y = padT + gh - bh;
+    const col = s.type==='capa' ? 'var(--capa)' : (s.type==='puissance' ? 'var(--puis)' : 'var(--renfo)');
+    bars += '<rect x="'+(x-bw/2)+'" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="4" fill="'+col+'"/>'+
+      (v>0 ? '<text x="'+x+'" y="'+(y-4)+'" text-anchor="middle" font-family="Barlow Condensed" font-weight="900" font-size="13" fill="#12203A">'+v+'</text>' : '');
+    labels += '<text x="'+x+'" y="'+(padT+gh+15)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5C6B84">'+dayNum(s.date)+'</text>';
+  });
+  // Separateurs de semaine (traits verticaux entre les blocs de 7 jours)
+  let prevW = 0;
+  jours.forEach((s, k) => {
+    const w = semaine(s.date);
+    if(k>0 && w!==prevW){
+      const x = padL + step*k;
+      wsep += '<line x1="'+x+'" y1="'+padT+'" x2="'+x+'" y2="'+(padT+gh)+'" stroke="#E3E9F2" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    }
+    prevW = w;
+  });
+  // Axe Y (0 et max)
+  const axis = '<line x1="'+padL+'" y1="'+(padT+gh)+'" x2="'+(W-padR)+'" y2="'+(padT+gh)+'" stroke="#D5DEEB" stroke-width="1.5"/>'+
+    '<text x="'+(padL-6)+'" y="'+(padT+gh)+'" text-anchor="end" font-size="10" fill="#9AA7B8">0</text>'+
+    '<text x="'+(padL-6)+'" y="'+(padT+8)+'" text-anchor="end" font-size="10" fill="#9AA7B8">'+maxV+'</text>';
+
+  const svg = '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">'+
+    axis + wsep + bars + labels + '</svg>';
+
+  // Totaux par semaine
+  const pctW = w => semCap[w] ? Math.round(semTot[w]/semCap[w]*100) : 0;
+  const weekBloc = '<div class="weekTot">'+
+    '<div class="wt"><div class="wv">'+pctW(0)+'%</div><div class="wk">Semaine 1<br>6-12 juil.</div></div>'+
+    '<div class="wt"><div class="wv">'+pctW(1)+'%</div><div class="wk">Semaine 2<br>13-19 juil.</div></div>'+
+    '<div class="wt"><div class="wv">'+pctW(2)+'%</div><div class="wk">Semaine 3<br>20-22 juil.</div></div>'+
+  '</div>';
+
+  return '<div class="chartCard"><h2><span class="bar" style="display:inline-block;width:5px;height:22px;border-radius:3px;background:var(--yellow)"></span>Participation par jour</h2>'+
+    '<div class="chartSub">Nombre de joueurs ayant valid\u00e9 leur s\u00e9ance, jour par jour ('+nbJoueurs+' joueurs au total).</div>'+
+    svg +
+    '<div class="chartLegend">'+
+      '<span><i style="background:var(--capa)"></i>Endurance capacit\u00e9</span>'+
+      '<span><i style="background:var(--puis)"></i>Endurance puissance</span>'+
+      '<span><i style="background:var(--renfo)"></i>Renforcement</span>'+
+    '</div>'+
+    '<div class="chartSub" style="margin:14px 0 0;font-weight:700;color:var(--navy)">Taux de participation moyen par semaine</div>'+
+    weekBloc +
+  '</div>';
+}
 async function renderStaff(){
   if(!state.coach) return;
   const box = $('#tab-staff');
@@ -1224,6 +1325,7 @@ async function renderStaff(){
     '<div class="statBox"><div class="v">'+moy+'</div><div class="k">Moyenne / joueur</div></div>'+
   '</div>';
 
+  html += buildChartParticipation(rows);
   html += '<div class="resetCard">'+
     '<div class="txt"><strong>Zone sensible.</strong> Remet les points et validations de tous les joueurs \u00e0 z\u00e9ro (les codes d\'acc\u00e8s restent). Utile avant le lancement officiel apr\u00e8s les tests.</div>'+
     '<button class="btnReset" onclick="coachResetAll()">Reset de tous les scores</button>'+
@@ -1253,11 +1355,17 @@ async function renderStaff(){
       '<img src="'+p.url+'" loading="lazy" alt=""></a>').join('');
     if(pics.length > 3) thumbs += '<span class="more">+'+(pics.length-3)+'</span>';
     thumbs += '</div>';
+    const nbFaites = Object.values((r.data&&r.data.days)||{}).filter(d=>d.s).length;
+    const nbProg = nbSeancesProgrammees();
+    const pct = nbProg ? Math.round(nbFaites/nbProg*100) : 0;
+    const pctBloc = '<div class="playerPct"><div class="pv">'+nbFaites+'/'+nbProg+'</div>'+
+      '<div class="pk">s\u00e9ances</div><div class="pctBar"><span style="width:'+pct+'%"></span></div></div>';
     return '<div class="rankRow coachRow" onclick="openDetail(\''+r.code+'\')">'+
       '<div class="pos">'+(i+1)+'</div>'+
       '<div class="who"><div class="n">'+escapeHtml(r.prenom)+' '+escapeHtml(r.nom)+'</div>'+
       (r.surnom?'<div class="s">'+escapeHtml(r.surnom)+'</div>':'')+'</div>'+
       (pics.length ? thumbs : '')+
+      pctBloc+
       '<div class="p">'+r.points+' <small>pts</small></div>'+
     '</div>';
   }).join('');
