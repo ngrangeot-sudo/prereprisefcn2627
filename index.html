@@ -151,7 +151,7 @@ nav.tabs button.active{background:var(--navy);color:var(--yellow)}
 .dayDate .m{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--muted)}
 .dayInfo{flex:1;min-width:0}
 .dayType{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
-.dayType.capa{color:var(--capa)}.dayType.puissance{color:var(--puis)}.dayType.renfo{color:var(--renfo)}.dayType.repos{color:var(--repos)}.dayType.reprise{color:#B8860B}
+.dayType.capa{color:var(--capa)}.dayType.puissance{color:var(--puis)}.dayType.renfo{color:var(--renfo)}.dayType.repos{color:var(--repos)}.dayType.reprise{color:#B8860B}.dayType.special{color:#B8860B}
 .dayTitle{font-family:'Barlow Condensed';font-weight:700;font-size:19px;color:var(--ink);line-height:1.1}
 .dayStatus{flex-shrink:0;font-size:11px;font-weight:700;padding:6px 11px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
 .st-done{background:#E3F6EC;color:#127A43}
@@ -245,7 +245,9 @@ input[type=file]{display:none}
 .calCell.capa .band{background:var(--capa)}
 .calCell.puissance .band{background:var(--puis)}
 .calCell.renfo .band{background:var(--renfo)}
-.calCell.reprise .band, .calCell.stage .band{background:var(--yellow)}
+.calCell.reprise .band, .calCell.stage .band, .calCell.special .band{background:var(--yellow)}
+.calCell.special{background:linear-gradient(140deg,#FFF9E6,#FFF2C2)}
+.calCell.special .cd{color:#8A6D00}
 .calCell .cs{font-size:8.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.15}
 .calCell.today{border-color:var(--yellow);background:#FFFBE6}
 .calCell.done{background:#E9F8F0}
@@ -403,7 +405,7 @@ input[type=file]{display:none}
       <span class="rDate">Jeudi 23 juillet</span>
       <span class="rSub">Groupes A &amp; B &bull; Stage de coh&eacute;sion les 25-26 juillet</span>
     </div>
-    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v4.1</div>
+    <div class="loginFoot">Joueurs : ton code personnel &nbsp;&bull;&nbsp; Staff : code coach<br>Code perdu ? Contacte le staff. &nbsp;&bull;&nbsp; v4.2</div>
   </div>
 </div>
 
@@ -451,7 +453,7 @@ const COACH_CODE = 'coachfcn26';
 const MODE_TEST = false;
 /* Dates exceptionnellement ouvertes a la validation hors du jour J (verification staff).
    Vider la liste [] pour tout reverrouiller. */
-const DATES_OUVERTES = ['2026-07-07'];
+const DATES_OUVERTES = ['2026-07-07', '2026-07-14'];
 const REPRISE_DATE = '2026-07-23';
 
 const LS_PREFIX = 'challengeFCN_';
@@ -469,7 +471,7 @@ const SESSIONS = [
   {date:'2026-07-11', type:'puissance', titre:'2 × 8 mn de 15/15', course:true},
   {date:'2026-07-12', type:'repos'},
   {date:'2026-07-13', type:'renfo', titre:'3 circuits en 45/15', liste:RENFO_LIST},
-  {date:'2026-07-14', type:'renfo', titre:'3 circuits en 45/15', liste:RENFO_LIST},
+  {date:'2026-07-14', type:'special', titre:'Spéciale 14 juillet : 1 km = 1 point !', course:true, bonusKm:true},
   {date:'2026-07-15', type:'repos'},
   {date:'2026-07-16', type:'capa', titre:'45 mn de course', course:true},
   {date:'2026-07-17', type:'puissance', titre:'3 × 4 mn de 10/10', course:true},
@@ -483,7 +485,7 @@ const SESSIONS = [
   {date:'2026-07-25', type:'stage', titre:'Stage de cohésion'},
   {date:'2026-07-26', type:'stage', titre:'Stage de cohésion'}
 ];
-const TYPE_LABEL = {capa:'Endurance capacité', puissance:'Endurance puissance', renfo:'Renforcement musculaire', repos:'Repos', reprise:'Jour J', stage:'Stage de cohésion'};
+const TYPE_LABEL = {capa:'Endurance capacité', puissance:'Endurance puissance', renfo:'Renforcement musculaire', repos:'Repos', reprise:'Jour J', stage:'Stage de cohésion', special:'Séance spéciale'};
 
 /* ================= ETAT ================= */
 let state = { code:null, player:null, data:{days:{}}, points:0, coach:false };
@@ -545,8 +547,13 @@ function totalPoints(data){
 function dayPoints(date, d){
   const s = SESSIONS.find(x=>x.date===date);
   let p = 0;
-  if(d.s && s && (s.type==='capa'||s.type==='puissance'||s.type==='renfo')) p += 5;
-  if(d.gps && s && s.course) p += 5;
+  if(s && s.bonusKm){
+    // Seance speciale : 1 km = 1 point (valide seulement si photo fournie)
+    if(d.s && d.km) p += Math.floor(d.km);
+  }else{
+    if(d.s && s && (s.type==='capa'||s.type==='puissance'||s.type==='renfo')) p += 5;
+    if(d.gps && s && s.course) p += 5;
+  }
   if(d.coeq) p += 2;
   if(d.eau) p += 1;
   return p;
@@ -865,7 +872,7 @@ function renderSeances(){
   let cells = DOW.map(d=>'<div class="calDow">'+d+'</div>').join('');
   for(const s of SESSIONS){
     const d = state.data.days[s.date] || {};
-    const isSession = ['capa','puissance','renfo'].includes(s.type);
+    const isSession = ['capa','puissance','renfo','special'].includes(s.type);
     let cls = s.type, mark = '';
     if(s.date === today) cls += ' today';
     if(isSession){
@@ -879,6 +886,7 @@ function renderSeances(){
     else if(s.type==='reprise') label = 'Reprise';
     else if(s.type==='stage') label = 'Stage';
     else if(s.type==='renfo') label = 'Circuits 45/15';
+    else if(s.type==='special') label = '⭐ 1km=1pt';
     else label = s.titre.replace(' de course','').replace('&times;','x');
     cells += '<div class="calCell '+cls+'" onclick="openDay(\''+s.date+'\')">'+mark+
       '<div class="cd">'+dayNum(s.date)+'</div><div class="band"></div><div class="cs">'+label+'</div></div>';
@@ -922,15 +930,19 @@ function openDay(date){
     '<span style="position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:2px;background:var(--renfo)"></span>'+x+'</li>').join('')+'</ul>';
 
   const gains = [];
-  if(d.s) gains.push('<span class="gain won">S\u00e9ance +5</span>');
-  if(d.gps) gains.push('<span class="gain won">Photo GPS +5</span>');
+  if(s.bonusKm){
+    if(d.s && d.km) gains.push('<span class="gain won">'+d.km+' km = +'+Math.floor(d.km)+'</span>');
+  }else{
+    if(d.s) gains.push('<span class="gain won">S\u00e9ance +5</span>');
+    if(d.gps) gains.push('<span class="gain won">Photo GPS +5</span>');
+  }
   if(d.coeq) gains.push('<span class="gain won">Co\u00e9quipier +2</span>');
   if(d.eau) gains.push('<span class="gain won">Eau +1</span>');
   if(gains.length) body += '<div class="gains">'+gains.join('')+'</div>';
 
   const corrigeable = (MODE_TEST || date === today || DATES_OUVERTES.indexOf(date) >= 0);
   const dejaValide = d.s || d.eau || d.coeq || d.gps;
-  if(corrigeable && (isSession || s.type==='repos')){
+  if(corrigeable && (isSession || s.type==='repos' || s.type==='special')){
     body += buildValidZone(s, d);
     if(dejaValide){
       body += '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #D8E0EC">'+
@@ -959,6 +971,55 @@ function buildValidZone(s, d){
   const isSession = ['capa','puissance','renfo'].includes(s.type);
   const isCourse = isSession && s.course;
   let rows = '';
+
+  // ===== Séance spéciale : 1 km = 1 point =====
+  if(s.bonusKm){
+    let z = '<div class="validZone"><h4>Séance spéciale du 14 juillet</h4>';
+    if(!d.s){
+      z += '<div style="font-size:13px;color:#2A3A55;margin-bottom:10px;line-height:1.5">'+
+        '<strong style="color:var(--navy)">1 km parcouru = 1 point !</strong> Cours autant que tu peux, note tes kilomètres et ajoute la photo de ton appli / montre GPS comme preuve.</div>';
+      z += '<div class="chkRow" style="align-items:center">'+
+        '<div class="cTxt" style="flex:1"><label for="km_val" style="font-weight:700">Kilomètres parcourus</label>'+
+        '<small>Photo appli / montre GPS obligatoire</small></div>'+
+        '<span class="mScore" style="display:flex;align-items:center;gap:6px">'+
+          '<input type="number" min="0" max="99" step="0.1" id="km_val" placeholder="0" style="width:70px;height:46px;text-align:center;font-family:\'Barlow Condensed\';font-weight:900;font-size:22px;border:2px solid #D5DEEB;border-radius:10px;color:var(--navy);outline:none">'+
+          '<span style="font-family:\'Barlow Condensed\';font-weight:700;font-size:15px;color:var(--muted)">km</span>'+
+        '</span></div>';
+      z += '<div class="photoLine" style="margin-top:10px"><label class="btn btn-sec" for="ph_gps">Insérer la photo (GPS / appli)</label>'+
+        '<input type="file" id="ph_gps" accept="image/*" onchange="fileChosen(this,\'gpsName\')">'+
+        '<span class="photoName" id="gpsName"></span></div>';
+    }else{
+      z += '<div style="font-size:13px;color:var(--ok);font-weight:600">Séance spéciale validée : '+(d.km||0)+' km = '+Math.floor(d.km||0)+' points !</div>';
+    }
+    // Bonus coéquipier et eau restent disponibles
+    if(!d.coeq){
+      z += '<div class="chkRow" style="margin-top:10px">'+
+        '<input type="checkbox" id="chk_coeq">'+
+        '<div class="cTxt"><label for="chk_coeq">Selfie avec un coéquipier pendant la séance</label>'+
+        '<small>Photo obligatoire</small>'+
+        '<div class="photoLine"><label class="btn btn-sec" for="ph_coeq">Insérer la photo</label>'+
+        '<input type="file" id="ph_coeq" accept="image/*" onchange="fileChosen(this,\'coeqName\')">'+
+        '<span class="photoName" id="coeqName"></span></div></div>'+
+        '<span class="cPts bonus">+2</span></div>';
+    }
+    if(!d.eau){
+      z += '<div class="chkRow">'+
+        '<input type="checkbox" id="chk_eau">'+
+        '<label class="cTxt" for="chk_eau">Bu uniquement de l\'eau dans la journée<small>Sur l\'honneur</small></label>'+
+        '<span class="cPts bonus">+1</span></div>';
+    }
+    if(!d.s || !d.coeq || !d.eau){
+      z += '<button class="btnValiderTout" id="btnValiderTout" onclick="validerSpeciale(\''+s.date+'\')">Valider ma séance</button>';
+    }else{
+      z += '<div style="font-size:13px;color:var(--ok);font-weight:600;margin-top:8px">Tout est validé. Beau travail !</div>';
+    }
+    if(MODE_TEST && (d.s || d.eau || d.coeq)){
+      z += '<div class="actRow"><div class="txt" style="color:#B02A2A">Outil de test<small>Remet ce jour à zéro</small></div>'+
+        '<button class="btn" style="background:#FDEBEB;color:#B02A2A;border:1.5px solid #F3C2C2" onclick="resetJour(\''+s.date+'\')">Annuler (test)</button></div>';
+    }
+    z += '</div>';
+    return z;
+  }
 
   if(isSession && !d.s){
     rows += '<div class="chkRow">'+
@@ -1061,6 +1122,59 @@ function fileOf(id){
   const el = document.getElementById(id);
   return (el && el.files && el.files[0]) ? el.files[0] : null;
 }
+async function validerSpeciale(date){
+  if(!guardOnline()) return;
+  if(!MODE_TEST && todayISO() !== date && DATES_OUVERTES.indexOf(date) < 0){
+    toast('La validation n\'est possible que le jour m\u00eame.', true);
+    closeDay(); renderSeances(); return;
+  }
+  const d = state.data.days[date] || {};
+  const kmEl = document.getElementById('km_val');
+  const km = kmEl ? parseFloat(kmEl.value) : NaN;
+  const fGps = fileOf('ph_gps');
+  const fCoeq = fileOf('ph_coeq');
+  const vCoeq = isChecked('chk_coeq');
+  const vEau = isChecked('chk_eau');
+
+  // Séance km : si on veut valider la course, il faut km + photo
+  const veutCourse = !d.s && (!isNaN(km) && km > 0 || fGps);
+  if(veutCourse){
+    if(isNaN(km) || km <= 0){ toast('Indique le nombre de kilom\u00e8tres parcourus.', true); return; }
+    if(!fGps){ toast('Ajoute la photo de ton appli / montre GPS pour valider tes kilom\u00e8tres.', true); return; }
+  }
+  if(vCoeq && !fCoeq){ toast('Ins\u00e8re le selfie avec ton co\u00e9quipier, ou d\u00e9coche la case.', true); return; }
+  if(!veutCourse && !vCoeq && !vEau){ toast('Renseigne tes kilom\u00e8tres ou coche un bonus avant de valider.', true); return; }
+
+  uploading = true;
+  const btn = document.getElementById('btnValiderTout');
+  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
+  try{
+    if(veutCourse){
+      d.gps = await sbUploadPhoto(fGps, date, 'gps');
+      const ex = await readExif(fGps);
+      d.meta = d.meta || {}; d.meta.gps = {up: Date.now(), taken: ex.taken, dev: ex.dev};
+      d.km = Math.round(km*10)/10;
+      d.s = 1; d.ts = Date.now();
+    }
+    if(vCoeq){
+      d.coeq = await sbUploadPhoto(fCoeq, date, 'coeq');
+      const ex = await readExif(fCoeq);
+      d.meta = d.meta || {}; d.meta.coeq = {up: Date.now(), taken: ex.taken, dev: ex.dev};
+    }
+  }catch(e){
+    uploading = false;
+    if(btn){ btn.disabled = false; btn.textContent = 'Valider ma s\u00e9ance'; }
+    toast('\u00c9chec de l\'envoi d\'une photo. V\u00e9rifie ta connexion et r\u00e9essaie.', true);
+    return;
+  }
+  uploading = false;
+  if(vEau) d.eau = 1;
+  state.data.days[date] = d;
+
+  const pts = dayPoints(date, d);
+  closeDay();
+  await persist('S\u00e9ance sp\u00e9ciale valid\u00e9e : '+pts+' point'+(pts>1?'s':'')+' !', true);
+}
 async function validerJournee(date){
   if(!guardOnline()) return;
   if(!MODE_TEST && todayISO() !== date && DATES_OUVERTES.indexOf(date) < 0){
@@ -1145,37 +1259,30 @@ async function renderGalerie(){
     box.innerHTML = '<div class="card"><h2><span class="bar"></span>Galerie du groupe</h2><div style="color:#B02A2A;font-size:14px;font-weight:600">Impossible de charger les photos. V\u00e9rifie ta connexion et reviens sur cet onglet.</div></div>';
     return;
   }
-  const training = [], selfies = [];
+  const photos = [];
   for(const r of rows){
     const days = (r.data && r.data.days) || {};
     for(const [date, d] of Object.entries(days)){
-      const who = r.surnom || r.prenom;
-      for(const kind of ['gps','sPhoto']){
-        if(d[kind] && typeof d[kind]==='string' && d[kind].indexOf('http')===0) training.push({url:d[kind], date, who});
+      for(const [kind, label] of [['gps','Course'],['coeq','Co\u00e9quipiers'],['sPhoto','S\u00e9ance']]){
+        if(d[kind] && typeof d[kind]==='string' && d[kind].indexOf('http')===0){
+          photos.push({url:d[kind], label, date, who: r.surnom || r.prenom});
+        }
       }
-      if(d.coeq && typeof d.coeq==='string' && d.coeq.indexOf('http')===0) selfies.push({url:d.coeq, date, who});
     }
   }
-  const parRecent = (a,b)=> b.date < a.date ? -1 : (b.date > a.date ? 1 : 0);
-  training.sort(parRecent); selfies.sort(parRecent);
+  photos.sort((a,b)=> b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
 
-  const grille = (arr, vide) => arr.length
-    ? '<div class="galGrid">'+arr.map(p=>
-        '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
-        '<img src="'+p.url+'" loading="lazy" alt="">'+
-        '<div class="gTxt">'+escapeHtml(p.who)+'<small>'+dayNum(p.date)+' juil.</small></div></a>').join('')+'</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:10px">'+arr.length+' photo'+(arr.length>1?'s':'')+'.</div>'
-    : '<div style="font-size:14px;color:var(--muted)">'+vide+'</div>';
-
-  const html =
-    '<div class="card"><h2><span class="bar"></span>Photos training</h2>'+
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Les preuves de s\u00e9ance et de course (appli / montre GPS) partag\u00e9es par le groupe.</div>'+
-      grille(training, 'Aucune photo training pour le moment. Les premi\u00e8res validations avec photo appara\u00eetront ici !')+
-    '</div>'+
-    '<div class="card"><h2><span class="bar"></span>Photos co\u00e9quipiers</h2>'+
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Les selfies avec les copains du groupe.</div>'+
-      grille(selfies, 'Aucun selfie co\u00e9quipier pour le moment. Prends une photo avec un co\u00e9quipier pendant une s\u00e9ance !')+
-    '</div>';
+  let html = '<div class="card"><h2><span class="bar"></span>Galerie du groupe</h2>'+
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Toutes les photos partag\u00e9es par les joueurs pendant le programme.</div>';
+  if(photos.length){
+    html += '<div class="galGrid">'+photos.map(p=>
+      '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
+      '<img src="'+p.url+'" loading="lazy" alt="">'+
+      '<div class="gTxt">'+escapeHtml(p.who)+'<small>'+dayNum(p.date)+' juil. \u2022 '+p.label+'</small></div></a>').join('')+'</div>';
+  }else{
+    html += '<div style="font-size:14px;color:var(--muted)">Aucune photo pour le moment. Les premi\u00e8res validations avec photo appara\u00eetront ici !</div>';
+  }
+  html += '</div>';
   box.innerHTML = html;
 }
 
@@ -1378,23 +1485,17 @@ async function renderStaff(){
   }).join('');
   html += '</div>';
 
-  const trainingS = photos.filter(p=>p.label!=='Co\u00e9quipiers');
-  const selfiesS  = photos.filter(p=>p.label==='Co\u00e9quipiers');
-  const blocStaff = (arr, titre, vide) => {
-    let h = '<div class="card"><h2><span class="bar"></span>'+titre+'</h2>';
-    if(arr.length){
-      h += '<div class="galGrid">'+arr.slice(0,24).map(p=>
-        '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
-        '<img src="'+p.url+'" loading="lazy" alt="">'+
-        '<div class="gTxt">'+escapeHtml(p.surnom || p.nom)+'<small>'+dayNum(p.date)+' juil.</small></div></a>').join('')+'</div>';
-      if(arr.length > 24) h += '<div style="font-size:12px;color:var(--muted);margin-top:8px">'+(arr.length-24)+' autres photos dans les fiches joueurs.</div>';
-    }else{
-      h += '<div style="font-size:13.5px;color:var(--muted)">'+vide+'</div>';
-    }
-    return h + '</div>';
-  };
-  html += blocStaff(trainingS, 'Photos training re\u00e7ues', 'Aucune photo training re\u00e7ue pour le moment. Elles appara\u00eetront ici d\u00e8s les premi\u00e8res validations.');
-  html += blocStaff(selfiesS,  'Photos co\u00e9quipiers re\u00e7ues', 'Aucun selfie co\u00e9quipier re\u00e7u pour le moment.');
+  html += '<div class="card"><h2><span class="bar"></span>Derni\u00e8res photos re\u00e7ues</h2>';
+  if(photos.length){
+    html += '<div class="galGrid">'+photos.slice(0,24).map(p=>
+      '<a class="galItem" href="'+p.url+'" target="_blank" rel="noopener">'+
+      '<img src="'+p.url+'" loading="lazy" alt="">'+
+      '<div class="gTxt">'+escapeHtml(p.surnom || p.nom)+'<small>'+dayNum(p.date)+' juil. \u2022 '+p.label+'</small></div></a>').join('')+'</div>';
+    if(photos.length > 24) html += '<div style="font-size:12px;color:var(--muted);margin-top:8px">'+(photos.length-24)+' autres photos dans les fiches joueurs.</div>';
+  }else{
+    html += '<div style="font-size:13.5px;color:var(--muted)">Aucune photo re\u00e7ue pour le moment. Elles appara\u00eetront ici d\u00e8s les premi\u00e8res validations.</div>';
+  }
+  html += '</div>';
 
   box.innerHTML = html;
   window._staffRows = rows;
@@ -1407,12 +1508,16 @@ function openDetail(code){
   for(const s of SESSIONS){
     if(s.type==='reprise' || s.type==='stage') continue;
     const d = days[s.date] || {};
-    const isSession = ['capa','puissance','renfo'].includes(s.type);
+    const isSession = ['capa','puissance','renfo','special'].includes(s.type);
     const mkTag = (kind, label, active, pts) => active
       ? '<span class="tag on">'+label+' +'+pts+'<b class="rev" title="Refuser cette validation" onclick="coachRevoke(\''+r.code+'\',\''+s.date+'\',\''+kind+'\')">&#215;</b></span>'
       : '<span class="tag">'+label+'</span>';
     let tags = '';
-    if(isSession){
+    if(s.bonusKm){
+      if(d.s && d.km) tags += '<span class="tag on">'+d.km+' km = +'+Math.floor(d.km)+'<b class="rev" title="Refuser" onclick="coachRevoke(\''+r.code+'\',\''+s.date+'\',\'s\')">&#215;</b></span>';
+      else tags += '<span class="tag">Course</span>';
+      tags += mkTag('coeq','Co\u00e9q.', !!d.coeq, 2);
+    }else if(isSession){
       tags += mkTag('s','S\u00e9ance', !!d.s, 5);
       if(s.course) tags += mkTag('gps','GPS', !!d.gps, 5);
       tags += mkTag('coeq','Co\u00e9q.', !!d.coeq, 2);
@@ -1521,7 +1626,7 @@ async function coachRevoke(code, date, kind){
   const d = days[date];
   if(!d) return;
   if(kind === 's'){
-    delete d.s; delete d.sPhoto; delete d.gps; delete d.coeq; delete d.meta;
+    delete d.s; delete d.sPhoto; delete d.gps; delete d.coeq; delete d.km; delete d.meta;
   }else{
     delete d[kind];
     if(d.meta) delete d.meta[kind];
